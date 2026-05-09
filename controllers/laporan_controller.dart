@@ -51,8 +51,9 @@ class LaporanController extends ChangeNotifier {
     }).length;
   }
 
-  int get totalSelesai =>
-      _semuaLaporan.where((l) => l.statusPekerjaan == 'SELESAI').length;
+  int get totalBerkas => _semuaLaporan.length;
+  int get totalBermasalah =>
+      _semuaLaporan.where((l) => l.statusPekerjaan == 'BERMASALAH').length;
   int get totalProses =>
       _semuaLaporan.where((l) => l.statusPekerjaan == 'PROSES').length;
   int get totalPending =>

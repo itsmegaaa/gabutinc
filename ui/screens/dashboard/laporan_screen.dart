@@ -116,7 +116,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
               physics: const BouncingScrollPhysics(),
               children: [
                 _buildFilterChip('SEMUA', laporanCtrl, isDark),
-                ...['PROSES', 'SELESAI', 'BATAL', 'PENDING'].map(
+                ...['PROSES', 'SELESAI', 'BATAL', 'PENDING', 'BERMASALAH'].map(
                   (status) => _buildFilterChip(status, laporanCtrl, isDark),
                 ),
               ],

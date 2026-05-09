@@ -248,31 +248,45 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
+
+          // BARISAN PILLS (Bisa digeser horizontal jika penuh)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
             child: Row(
               children: [
                 StatPill(
-                  label: 'BULAN INI',
+                  label: 'PROSES',
                   value: ctrl.totalBulanIni.toString(),
                   color: Colors.blue,
                   icon: Icons.calendar_month,
                 ),
                 const SizedBox(width: 12),
                 StatPill(
-                  label: 'PROSES',
+                  label: 'PENDING',
                   value: ctrl.totalProses.toString(),
                   color: Colors.orange,
                   icon: Icons.pending_actions,
                 ),
                 const SizedBox(width: 12),
                 StatPill(
-                  label: 'SELESAI',
-                  value: ctrl.totalSelesai.toString(),
-                  color: Colors.green,
-                  icon: Icons.check_circle_outline,
+                  label: 'BERMASALAH',
+                  value: ctrl.totalBermasalah.toString(),
+                  color: Colors.red,
+                  icon: Icons.error_outline,
                 ),
               ],
+            ),
+          ),
+
+          // TEKS TOTAL BERKAS DITARUH DI SINI (Di luar area scroll)
+          const SizedBox(height: 10),
+          Text(
+            'Total Berkas: ${ctrl.totalBerkas}',
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontStyle: FontStyle.normal,
             ),
           ),
         ],
