@@ -11,8 +11,10 @@ import '../../../data/repositories/laporan_repository.dart';
 
 // Import layar & widget yang akan dibuat nanti
 import '../dashboard/laporan_screen.dart';
-import '../form/form_laporan_screen.dart';
+import '../../../controllers/form_laporan_controller.dart';
 import '../../widgets/custom_drawer.dart';
+import '../form/form_laporan_screen.dart';
+import '../../widgets/stat_pill.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -29,11 +31,15 @@ class HomeScreen extends StatelessWidget {
         title: const Text('Sistem Informasi Riwayat Administrasi'),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.account_circle, size: 28),
-            onPressed: () {
-              // Buka drawer menggunakan GlobalKey atau fungsi bawaan Scaffold
-              Scaffold.of(context).openDrawer();
+          Builder(
+            builder: (BuildContext innerContext) {
+              return IconButton(
+                icon: const Icon(Icons.account_circle, size: 28),
+                onPressed: () {
+                  // Buka drawer menggunakan innerContext dari Builder
+                  Scaffold.of(innerContext).openDrawer();
+                },
+              );
             },
           ),
           const SizedBox(width: 8),
@@ -96,6 +102,13 @@ class HomeScreen extends StatelessWidget {
                       label: 'Input Data\nBaru',
                       color: Colors.green.shade600,
                       onTap: () {
+                        // FIX KRITIS: Bersihkan form dan siapkan data baru
+                        context.read<FormLaporanController>().initForm(
+                              laporanExisting: null,
+                              tahunAktif:
+                                  context.read<LaporanController>().tahunAktif,
+                            );
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -235,54 +248,35 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _statItem(
-                    'Bulan Ini', ctrl.totalBulanIni.toString(), Colors.blue),
-              ),
-              _divider(),
-              Expanded(
-                child: _statItem(
-                    'Proses', ctrl.totalProses.toString(), Colors.orange),
-              ),
-              _divider(),
-              Expanded(
-                child: _statItem(
-                    'Selesai', ctrl.totalSelesai.toString(), Colors.green),
-              ),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                StatPill(
+                  label: 'BULAN INI',
+                  value: ctrl.totalBulanIni.toString(),
+                  color: Colors.blue,
+                  icon: Icons.calendar_month,
+                ),
+                const SizedBox(width: 12),
+                StatPill(
+                  label: 'PROSES',
+                  value: ctrl.totalProses.toString(),
+                  color: Colors.orange,
+                  icon: Icons.pending_actions,
+                ),
+                const SizedBox(width: 12),
+                StatPill(
+                  label: 'SELESAI',
+                  value: ctrl.totalSelesai.toString(),
+                  color: Colors.green,
+                  icon: Icons.check_circle_outline,
+                ),
+              ],
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _divider() => Container(
-        height: 40,
-        width: 1,
-        color: Colors.grey.shade300,
-        margin: const EdgeInsets.symmetric(horizontal: 10),
-      );
-
-  Widget _statItem(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
-          textAlign: TextAlign.center,
-        ),
-      ],
     );
   }
 

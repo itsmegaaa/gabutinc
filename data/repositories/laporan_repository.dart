@@ -8,17 +8,20 @@ import '../models/laporan_model.dart';
 class LaporanRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  static const String _webAppUrl =
-      'https://script.google.com/macros/s/AKfycbxSUidflzOfoP7HpQ38bin186cmINe5gb2plMZi9CL716jv5dfK10w5hR78BftVMI0C/exec';
-
   // ==========================================================================
   // REAL-TIME STREAMS
   // ==========================================================================
 
   Stream<List<LaporanModel>> streamLaporanByTahun(String tahun) {
-    return _db.collection('laporan_$tahun').snapshots().map((snapshot) {
+    return _db
+        .collection('laporan_$tahun')
+        .orderBy('waktuUpdate', descending: true)
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs
           .map((doc) => LaporanModel.fromFirestore(doc))
+          // FIX MEDIUM: Hanya ambil data yang valid (bukan null)
+          .whereType<LaporanModel>()
           .toList();
     });
   }
@@ -77,18 +80,28 @@ class LaporanRepository {
     });
   }
 
-  // ==========================================================================
+// ==========================================================================
   // SINKRONISASI MANUAL (APPS SCRIPT TRIGGER)
   // ==========================================================================
 
   Future<void> triggerSyncKeSheet() async {
-    if (_webAppUrl.isEmpty) {
-      throw Exception('URL Web App belum diatur');
-    }
-
     try {
+      // FIX MEDIUM (Security): Ambil URL Apps Script dengan aman dari Firestore
+      final doc = await _db.collection('master_data').doc('config').get();
+
+      if (!doc.exists || doc.data() == null) {
+        throw Exception(
+            'Dokumen konfigurasi sistem tidak ditemukan di database.');
+      }
+
+      final webAppUrl = doc.data()!['webAppUrl'] as String?;
+      if (webAppUrl == null || webAppUrl.isEmpty) {
+        throw Exception('URL Apps Script belum disetel di Firebase.');
+      }
+
+      // Gunakan URL yang didapat dari database
       await http.post(
-        Uri.parse(_webAppUrl),
+        Uri.parse(webAppUrl),
         body: jsonEncode({'action': 'sync_from_firebase'}),
       );
     } catch (e) {
@@ -96,6 +109,11 @@ class LaporanRepository {
           e.toString().contains('XMLHttpRequest error')) {
         debugPrint(
             'Abaikan error CORS. Eksekusi di Google Apps Script tetap berjalan.');
+
+        await _db.collection('sync_metadata').doc('status').set(
+            {'lastSyncToSheet': FieldValue.serverTimestamp()},
+            SetOptions(merge: true));
+
         return;
       }
 
@@ -135,5 +153,25 @@ class LaporanRepository {
       debugPrint('Error get master bank: $e');
       return [];
     }
+  }
+
+  // Stream data untuk list di layar Master Bank (Real-time)
+  Stream<QuerySnapshot> streamMasterBank() {
+    return _db.collection('master_bank').orderBy('namaBank').snapshots();
+  }
+
+  // Tambah Data Bank Baru
+  Future<void> tambahBank(Map<String, dynamic> data) async {
+    await _db.collection('master_bank').add(data);
+  }
+
+  // Update Data Bank
+  Future<void> updateBank(String id, Map<String, dynamic> data) async {
+    await _db.collection('master_bank').doc(id).update(data);
+  }
+
+  // Hapus Data Bank
+  Future<void> hapusBank(String id) async {
+    await _db.collection('master_bank').doc(id).delete();
   }
 }

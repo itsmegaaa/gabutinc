@@ -153,15 +153,50 @@ class _FormLaporanScreenState extends State<FormLaporanScreen> {
                               hint: 'Pilih atau ketik nama notaris',
                               isDark: isDark,
                               focusNode: focusNode,
+                              onChanged: (val) {
+                                ctrl.namaNotarisCtrl.text = val;
+                              },
                             );
                           },
                         ),
                         const SizedBox(height: 16),
                         _buildLabel('KCU/KCP (Bank)'),
-                        _buildTextField(
-                          controller: ctrl.namaBankCtrl,
-                          hint: 'Contoh: MICRO GARUT CILEDUG 2',
-                          isDark: isDark,
+                        Autocomplete<Map<String, dynamic>>(
+                          optionsBuilder: (TextEditingValue textEditingValue) {
+                            if (textEditingValue.text.isEmpty) {
+                              return const Iterable<
+                                  Map<String, dynamic>>.empty();
+                            }
+                            return ctrl.listMasterBank.where((option) {
+                              final namaBank =
+                                  option['namaBank'].toString().toLowerCase();
+                              return namaBank.contains(
+                                  textEditingValue.text.toLowerCase());
+                            });
+                          },
+                          displayStringForOption: (option) =>
+                              option['namaBank'] as String,
+                          onSelected: (selection) => ctrl.setNamaBankDanPic(
+                              selection['namaBank'] as String),
+                          fieldViewBuilder: (context, textEditingController,
+                              focusNode, onFieldSubmitted) {
+                            // Sinkronisasi teks awal saat mode Edit
+                            if (ctrl.namaBankCtrl.text.isNotEmpty &&
+                                textEditingController.text.isEmpty) {
+                              textEditingController.text =
+                                  ctrl.namaBankCtrl.text;
+                            }
+
+                            return _buildTextField(
+                              controller: textEditingController,
+                              hint: 'Ketik nama KCU/KCP Bank...',
+                              isDark: isDark,
+                              focusNode: focusNode,
+                              onChanged: (val) {
+                                ctrl.namaBankCtrl.text = val;
+                              },
+                            );
+                          },
                         ),
                         const SizedBox(height: 16),
                         _buildLabel('PIC Bank'),
@@ -193,17 +228,24 @@ class _FormLaporanScreenState extends State<FormLaporanScreen> {
                         InkWell(
                           onTap: () => _pilihTanggal(
                               context, ctrl.tanggalOrder, ctrl.setTanggalOrder),
-                          child: IgnorePointer(
-                            child: _buildTextField(
-                              controller: TextEditingController(
-                                text: ctrl.tanggalOrder != null
-                                    ? DateFormat('dd MMM yyyy')
-                                        .format(ctrl.tanggalOrder!)
-                                    : '',
+                          child: InputDecorator(
+                            decoration:
+                                _inputDecoration('Pilih tanggal order', isDark)
+                                    .copyWith(
+                              suffixIcon: const Icon(Icons.calendar_month,
+                                  color: Colors.grey),
+                            ),
+                            child: Text(
+                              ctrl.tanggalOrder != null
+                                  ? DateFormat('dd MMM yyyy')
+                                      .format(ctrl.tanggalOrder!)
+                                  : 'Pilih tanggal order',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: ctrl.tanggalOrder != null
+                                    ? (isDark ? Colors.white : Colors.black87)
+                                    : Colors.grey.shade400,
                               ),
-                              hint: 'Pilih tanggal order',
-                              isDark: isDark,
-                              suffixIcon: Icons.calendar_month,
                             ),
                           ),
                         ),
@@ -306,22 +348,23 @@ class _FormLaporanScreenState extends State<FormLaporanScreen> {
                       isDark: isDark,
                       children: [
                         _buildLabel('Tanggal Pelaksanaan'),
-                        InkWell(
-                          onTap: () => _pilihTanggal(
-                              context,
-                              ctrl.tanggalPelaksanaan,
-                              ctrl.setTanggalPelaksanaan),
-                          child: IgnorePointer(
-                            child: _buildTextField(
-                              controller: TextEditingController(
-                                text: ctrl.tanggalPelaksanaan != null
-                                    ? DateFormat('dd MMM yyyy')
-                                        .format(ctrl.tanggalPelaksanaan!)
-                                    : '',
-                              ),
-                              hint: 'Pilih tanggal pelaksanaan',
-                              isDark: isDark,
-                              suffixIcon: Icons.calendar_month,
+                        InputDecorator(
+                          decoration: _inputDecoration(
+                                  'Otomatis mengikuti Tanggal Order', isDark)
+                              .copyWith(
+                            suffixIcon: const Icon(Icons.lock_outline,
+                                color: Colors.grey),
+                          ),
+                          child: Text(
+                            ctrl.tanggalPelaksanaan != null
+                                ? DateFormat('dd MMM yyyy')
+                                    .format(ctrl.tanggalPelaksanaan!)
+                                : 'Otomatis mengikuti Tanggal Order',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: ctrl.tanggalPelaksanaan != null
+                                  ? (isDark ? Colors.white : Colors.black87)
+                                  : Colors.grey.shade400,
                             ),
                           ),
                         ),
@@ -393,17 +436,24 @@ class _FormLaporanScreenState extends State<FormLaporanScreen> {
                         InkWell(
                           onTap: () => _pilihTanggal(
                               context, ctrl.tanggalBast, ctrl.setTanggalBast),
-                          child: IgnorePointer(
-                            child: _buildTextField(
-                              controller: TextEditingController(
-                                text: ctrl.tanggalBast != null
-                                    ? DateFormat('dd MMM yyyy')
-                                        .format(ctrl.tanggalBast!)
-                                    : '',
+                          child: InputDecorator(
+                            decoration:
+                                _inputDecoration('Pilih tanggal BAST', isDark)
+                                    .copyWith(
+                              suffixIcon: const Icon(Icons.calendar_month,
+                                  color: Colors.grey),
+                            ),
+                            child: Text(
+                              ctrl.tanggalBast != null
+                                  ? DateFormat('dd MMM yyyy')
+                                      .format(ctrl.tanggalBast!)
+                                  : 'Pilih tanggal BAST',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: ctrl.tanggalBast != null
+                                    ? (isDark ? Colors.white : Colors.black87)
+                                    : Colors.grey.shade400,
                               ),
-                              hint: 'Pilih tanggal BAST',
-                              isDark: isDark,
-                              suffixIcon: Icons.calendar_month,
                             ),
                           ),
                         ),
@@ -541,6 +591,7 @@ class _FormLaporanScreenState extends State<FormLaporanScreen> {
     IconData? suffixIcon,
     String? prefixText,
     FocusNode? focusNode,
+    Function(String)? onChanged,
   }) {
     return TextFormField(
       controller: controller,
@@ -549,6 +600,7 @@ class _FormLaporanScreenState extends State<FormLaporanScreen> {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       validator: validator,
+      onChanged: onChanged,
       style: const TextStyle(fontSize: 14),
       decoration: _inputDecoration(hint, isDark).copyWith(
         prefixText: prefixText,

@@ -1,10 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 import 'controllers/form_laporan_controller.dart';
@@ -13,26 +11,7 @@ import 'controllers/user_provider.dart';
 import 'controllers/laporan_controller.dart';
 import 'ui/screens/auth/login_screen.dart';
 import 'ui/screens/portal/home_screen.dart';
-
-// ============================================================================
-// THEME CONTROLLER
-// ============================================================================
-class ThemeController extends ChangeNotifier {
-  bool isDarkMode = false;
-
-  Future<void> muatDariPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    isDarkMode = prefs.getBool('tema_gelap') ?? false;
-    notifyListeners();
-  }
-
-  Future<void> toggleTheme() async {
-    isDarkMode = !isDarkMode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('tema_gelap', isDarkMode);
-    notifyListeners();
-  }
-}
+import 'controllers/theme_controller.dart';
 
 // ============================================================================
 // MAIN FUNCTION

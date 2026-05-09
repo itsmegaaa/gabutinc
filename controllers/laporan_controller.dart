@@ -33,13 +33,19 @@ class LaporanController extends ChangeNotifier {
 
   // Statistik untuk HomeScreen (REVISI tanggalPelaksanaan)
   int get totalBulanIni {
-    final bulanIni = DateTime.now().month;
+    final sekarang = DateTime.now();
+    final bulanIni = sekarang.month;
+    final tahunIni = sekarang.year;
+
     return _semuaLaporan.where((l) {
+      // HAPUS pengecekan == null dan tanda !
       if (l.tanggalPelaksanaan.isEmpty) return false;
+
       try {
+        // HAPUS tanda ! di dalam parse
         final tgl = DateTime.parse(l.tanggalPelaksanaan);
-        return tgl.month == bulanIni;
-      } catch (_) {
+        return tgl.month == bulanIni && tgl.year == tahunIni;
+      } catch (e) {
         return false;
       }
     }).length;

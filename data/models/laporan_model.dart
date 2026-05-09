@@ -61,10 +61,12 @@ class LaporanModel {
     required this.sudahSyncSheet,
   });
 
-  factory LaporanModel.fromFirestore(DocumentSnapshot doc) {
+  static LaporanModel? fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>?;
-    if (data == null)
-      throw StateError('Data kosong untuk document ID: ${doc.id}');
+
+    // Jika data kosong, kembalikan null saja, jangan di-throw!
+    if (data == null) return null;
+
     return LaporanModel.fromMap(data, doc.id);
   }
 
@@ -125,9 +127,7 @@ class LaporanModel {
       'notes': notes,
       'kekurangan': kekurangan.toUpperCase(),
       'picInternal': picInternal,
-      'waktuUpdate': waktuUpdate != null
-          ? Timestamp.fromDate(waktuUpdate!)
-          : FieldValue.serverTimestamp(),
+      'waktuUpdate': FieldValue.serverTimestamp(),
       'updatedBy': updatedBy,
       'sudahSyncSheet': sudahSyncSheet,
     };

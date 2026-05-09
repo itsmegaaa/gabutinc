@@ -8,7 +8,7 @@ import '../../core/constants/app_constants.dart';
 import '../../controllers/user_provider.dart';
 import '../../controllers/laporan_controller.dart';
 import '../../data/repositories/laporan_repository.dart';
-import '../../main.dart'; // Untuk ThemeController
+import '../../controllers/theme_controller.dart'; // Untuk ThemeController
 import '../screens/master/master_bank_screen.dart'; // Sesuaikan path-nya jika berbeda
 
 class CustomDrawer extends StatelessWidget {

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../data/repositories/laporan_repository.dart';
 
 class MasterBankScreen extends StatelessWidget {
   const MasterBankScreen({Key? key}) : super(key: key);
 
-  // Fungsi untuk menampilkan Dialog Tambah/Edit Bank
   void _tampilDialogBank(BuildContext context, {DocumentSnapshot? doc}) {
+    final repo = context.read<LaporanRepository>(); // Ambil repository
     final bankCtrl =
         TextEditingController(text: doc != null ? doc['namaBank'] : '');
     final picCtrl =
@@ -22,6 +24,7 @@ class MasterBankScreen extends StatelessWidget {
           children: [
             TextField(
               controller: bankCtrl,
+              textCapitalization: TextCapitalization.characters,
               decoration: const InputDecoration(
                 labelText: 'Nama KCU/KCP Bank',
                 hintText: 'Contoh: KCP GARUT CILEDUG',
@@ -30,6 +33,7 @@ class MasterBankScreen extends StatelessWidget {
             const SizedBox(height: 16),
             TextField(
               controller: picCtrl,
+              textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(
                 labelText: 'Nama PIC Bank',
                 hintText: 'Masukkan nama PIC',
@@ -44,21 +48,23 @@ class MasterBankScreen extends StatelessWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
                 backgroundColor: AppConstants.navyColor),
-            onPressed: () {
+            onPressed: () async {
               if (bankCtrl.text.trim().isEmpty) return;
 
               final data = {
-                'namaBank': bankCtrl.text.trim(),
+                'namaBank': bankCtrl.text.trim().toUpperCase(),
                 'namaPic': picCtrl.text.trim(),
                 'waktuUpdate': FieldValue.serverTimestamp(),
               };
 
+              // FIX MEDIUM: Gunakan Repository, bukan Firestore instance langsung
               if (doc == null) {
-                FirebaseFirestore.instance.collection('master_bank').add(data);
+                await repo.tambahBank(data);
               } else {
-                doc.reference.update(data);
+                await repo.updateBank(doc.id, data);
               }
-              Navigator.pop(ctx);
+
+              if (ctx.mounted) Navigator.pop(ctx);
             },
             child: const Text('SIMPAN',
                 style: TextStyle(color: AppConstants.goldColor)),
@@ -71,6 +77,7 @@ class MasterBankScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final repo = context.read<LaporanRepository>(); // Panggil repo di sini
 
     return Scaffold(
       appBar: AppBar(
@@ -83,10 +90,8 @@ class MasterBankScreen extends StatelessWidget {
         child: const Icon(Icons.add, color: AppConstants.goldColor),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('master_bank')
-            .orderBy('namaBank')
-            .snapshots(),
+        // FIX MEDIUM: Panggil stream dari repository
+        stream: repo.streamMasterBank(),
         builder: (context, snapshot) {
           if (snapshot.hasError)
             return const Center(child: Text('Terjadi kesalahan'));
@@ -115,22 +120,15 @@ class MasterBankScreen extends StatelessWidget {
                   boxShadow: [AppConstants.primaryShadow],
                 ),
                 child: ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   leading: const CircleAvatar(
                     backgroundColor: AppConstants.navyColor,
                     child: Icon(Icons.account_balance,
                         color: AppConstants.goldColor, size: 20),
                   ),
-                  title: Text(
-                    doc['namaBank'],
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 15),
-                  ),
+                  title: Text(doc['namaBank'],
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                    'PIC: ${doc['namaPic'].toString().isEmpty ? "-" : doc['namaPic']}',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
+                      'PIC: ${doc['namaPic'].toString().isEmpty ? "-" : doc['namaPic']}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -143,26 +141,7 @@ class MasterBankScreen extends StatelessWidget {
                         icon:
                             const Icon(Icons.delete_outline, color: Colors.red),
                         onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Hapus Data?'),
-                              content: const Text(
-                                  'Data bank ini akan dihapus permanen.'),
-                              actions: [
-                                TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: const Text('BATAL')),
-                                TextButton(
-                                    onPressed: () {
-                                      doc.reference.delete();
-                                      Navigator.pop(ctx);
-                                    },
-                                    child: const Text('HAPUS',
-                                        style: TextStyle(color: Colors.red))),
-                              ],
-                            ),
-                          );
+                          _konfirmasiHapus(context, repo, doc.id);
                         },
                       ),
                     ],
@@ -172,6 +151,29 @@ class MasterBankScreen extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+
+  void _konfirmasiHapus(
+      BuildContext context, LaporanRepository repo, String id) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Data?'),
+        content: const Text('Data bank ini akan dihapus permanen.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('BATAL')),
+          TextButton(
+            onPressed: () async {
+              // FIX MEDIUM: Hapus lewat repository
+              await repo.hapusBank(id);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('HAPUS', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

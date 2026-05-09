@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../data/models/laporan_model.dart';
 import '../data/repositories/laporan_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FormLaporanController extends ChangeNotifier {
   List<Map<String, dynamic>> _listMasterBank = [];
@@ -33,7 +34,7 @@ class FormLaporanController extends ChangeNotifier {
   // ==========================================================================
   // STATE VARIABLES (Dropdown & Tanggal)
   // ==========================================================================
-  String _statusPekerjaan = 'MENUNGGU DOKUMEN'; // Fallback / Default
+  String _statusPekerjaan = 'PROSES';
   DateTime? _tanggalOrder;
   DateTime? _tanggalPelaksanaan;
   DateTime? _tanggalBast;
@@ -56,9 +57,17 @@ class FormLaporanController extends ChangeNotifier {
   // INISIALISASI FORM
   // ==========================================================================
 
-  void initForm({LaporanModel? laporanExisting, required String tahunAktif}) {
+// FIX MEDIUM: Ubah menjadi Future<void> dan async
+  Future<void> initForm(
+      {LaporanModel? laporanExisting, required String tahunAktif}) async {
+    // 1. Nyalakan loading spinner di layar form
+    _setLoading(true);
+
     _tahunTarget = tahunAktif;
     _laporanAwal = laporanExisting;
+
+    // 2. TUNGGU master bank selesai diunduh dari database
+    await muatMasterBank();
 
     if (laporanExisting != null) {
       namaDebiturCtrl.text = laporanExisting.namaDebitur;
@@ -91,6 +100,9 @@ class FormLaporanController extends ChangeNotifier {
     } else {
       _bersihkanForm();
     }
+
+    // 3. Matikan loading spinner agar form ditampilkan
+    _setLoading(false);
   }
 
   DateTime? _parseDateOrNull(String dateStr) {
@@ -159,7 +171,7 @@ class FormLaporanController extends ChangeNotifier {
           biayaNotarisCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
 
       String formatTanggal(DateTime? date) {
-        return date != null ? DateFormat('yyyy-MM-dd').format(date) : '';
+        return date != null ? DateFormat('dd-MM-yyyy').format(date) : '';
       }
 
       final laporanBaru = LaporanModel(
@@ -275,7 +287,7 @@ class FormLaporanController extends ChangeNotifier {
     kekuranganCtrl.clear();
     picInternalCtrl.clear();
 
-    _statusPekerjaan = 'MENUNGGU DOKUMEN';
+    _statusPekerjaan = 'PROSES';
     _tanggalOrder = null;
     _tanggalPelaksanaan = null;
     _tanggalBast = null;
@@ -332,18 +344,18 @@ class FormLaporanController extends ChangeNotifier {
   }
 
   // Fungsi otomatis menghitung Batas SLA
-  void _hitungBatasSla() {
-    if (_tanggalPelaksanaan != null) {
-      // TODO: Ganti angka 30 ini dengan variabel Target SLA Default dari Master Data Anda
-      int targetSlaDefault = 30;
+  Future<void> _hitungBatasSla() async {
+    if (_tanggalOrder == null) return;
 
-      // Tambahkan hari ke tanggal pelaksanaan
-      DateTime batasSlaDate =
-          _tanggalPelaksanaan!.add(Duration(days: targetSlaDefault));
+    final prefs = await SharedPreferences.getInstance();
+    final int targetSla = prefs.getInt('default_sla') ?? 30;
 
-      // Format ke String (misal: 2026-01-31) sesuai hint UI sebelumnya
-      batasSlaCtrl.text = DateFormat('yyyy-MM-dd').format(batasSlaDate);
-    }
+    final tanggalBatas = _tanggalOrder!.add(Duration(days: targetSla));
+
+    // PERUBAHAN DISINI: Format diubah ke dd-MM-yyyy
+    batasSlaCtrl.text = DateFormat('dd-MM-yyyy').format(tanggalBatas);
+
+    notifyListeners();
   }
 
   // Fungsi otomatis menghitung Umur Pekerjaan dan Auto-Status
