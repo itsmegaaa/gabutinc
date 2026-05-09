@@ -125,11 +125,11 @@ class FormLaporanController extends ChangeNotifier {
   // SETTERS UNTUK STATE NON-TEXTFIELD
   // ==========================================================================
 
-  void setTanggalOrder(DateTime date) {
+  Future<void> setTanggalOrder(DateTime date) async {
     _tanggalOrder = date;
-    _tanggalPelaksanaan = date; // Poin 3: Samakan tanggal pelaksanaan
-    _hitungBatasSla(); // Poin 4: Otomatis hitung Batas SLA
-    _hitungUmurPekerjaan(); // Poin 5: Otomatis hitung Umur Pekerjaan
+    _tanggalPelaksanaan = date;
+    await _hitungBatasSla();
+    _hitungUmurPekerjaan();
     notifyListeners();
   }
 
@@ -171,7 +171,7 @@ class FormLaporanController extends ChangeNotifier {
           biayaNotarisCtrl.text.replaceAll(RegExp(r'[^0-9]'), '');
 
       String formatTanggal(DateTime? date) {
-        return date != null ? DateFormat('dd-MM-yyyy').format(date) : '';
+        return date != null ? DateFormat('yyyy-MM-dd').format(date) : '';
       }
 
       final laporanBaru = LaporanModel(
@@ -353,7 +353,7 @@ class FormLaporanController extends ChangeNotifier {
     final tanggalBatas = _tanggalOrder!.add(Duration(days: targetSla));
 
     // PERUBAHAN DISINI: Format diubah ke dd-MM-yyyy
-    batasSlaCtrl.text = DateFormat('dd-MM-yyyy').format(tanggalBatas);
+    batasSlaCtrl.text = DateFormat('yyyy-MM-dd').format(tanggalBatas);
 
     notifyListeners();
   }

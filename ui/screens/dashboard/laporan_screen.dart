@@ -378,8 +378,28 @@ class _LaporanScreenState extends State<LaporanScreen> {
       return const SizedBox.shrink();
     }
 
+    DateTime? _parseFlexibleDate(String dateStr) {
+      if (dateStr.isEmpty) return null;
+      try {
+        return DateTime.parse(dateStr); // Coba ISO 8601
+      } catch (_) {}
+      try {
+        // Fallback data lama
+        final parts = dateStr.split('-');
+        if (parts.length == 3) {
+          return DateTime(
+              int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+        }
+      } catch (_) {}
+      return null;
+    }
+
     try {
-      final tglBatasSla = DateTime.parse(batasSlaStr);
+      final tglBatasSla = _parseFlexibleDate(batasSlaStr);
+
+      if (tglBatasSla == null)
+        throw const FormatException('Format tanggal tidak valid');
+
       final sisaWaktu = tglBatasSla.difference(DateTime.now()).inDays;
 
       Color warnaSla = AppConstants.navyColor;

@@ -329,7 +329,7 @@ class CustomDrawer extends StatelessWidget {
   // ==========================================================================
 
   void _tampilkanKelolaNotaris(BuildContext context) {
-    final db = FirebaseFirestore.instance;
+    final repo = context.read<LaporanRepository>();
 
     showDialog(
       context: context,
@@ -348,11 +348,11 @@ class CustomDrawer extends StatelessWidget {
                 const SizedBox(height: 16),
                 Expanded(
                   child: StreamBuilder<DocumentSnapshot>(
-                    stream:
-                        db.collection('master_data').doc('notaris').snapshots(),
+                    stream: repo.streamMasterNotaris(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData)
+                      if (!snapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
+                      }
 
                       List<String> notarisList = [];
                       if (snapshot.data!.exists &&
@@ -377,14 +377,7 @@ class CustomDrawer extends StatelessWidget {
                             title: Text(nama),
                             trailing: IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                db
-                                    .collection('master_data')
-                                    .doc('notaris')
-                                    .update({
-                                  'items': FieldValue.arrayRemove([nama])
-                                });
-                              },
+                              onPressed: () => repo.hapusNotaris(nama),
                             ),
                           );
                         },
@@ -401,7 +394,7 @@ class CustomDrawer extends StatelessWidget {
                   ),
                   icon: const Icon(Icons.add),
                   label: const Text('Tambah Notaris'),
-                  onPressed: () => _tambahNotarisBaru(ctx, db),
+                  onPressed: () => _tambahNotarisBaru(ctx, repo),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
@@ -415,7 +408,7 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
-  void _tambahNotarisBaru(BuildContext context, FirebaseFirestore db) {
+  void _tambahNotarisBaru(BuildContext context, LaporanRepository repo) {
     final ctrl = TextEditingController();
     showDialog(
       context: context,
@@ -423,7 +416,6 @@ class CustomDrawer extends StatelessWidget {
         title: const Text('Tambah Notaris Baru'),
         content: TextField(
           controller: ctrl,
-          textCapitalization: TextCapitalization.words,
           decoration: const InputDecoration(hintText: 'Masukkan nama notaris'),
         ),
         actions: [
@@ -433,10 +425,7 @@ class CustomDrawer extends StatelessWidget {
             onPressed: () async {
               final namaBaru = ctrl.text.trim();
               if (namaBaru.isNotEmpty) {
-                // Set dengan merge agar tidak error jika dokumen belum ada
-                await db.collection('master_data').doc('notaris').set({
-                  'items': FieldValue.arrayUnion([namaBaru])
-                }, SetOptions(merge: true));
+                await repo.tambahNotaris(namaBaru);
                 if (ctx.mounted) Navigator.pop(ctx);
               }
             },

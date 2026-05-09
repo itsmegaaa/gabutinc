@@ -136,6 +136,27 @@ class LaporanRepository {
     return [];
   }
 
+  Future<void> tambahNotaris(String nama) async {
+    await _db.collection('master_data').doc('notaris').set(
+      {
+        'items': FieldValue.arrayUnion([nama])
+      },
+      SetOptions(merge: true),
+    );
+  }
+
+  Future<void> hapusNotaris(String nama) async {
+    await _db.collection('master_data').doc('notaris').update(
+      {
+        'items': FieldValue.arrayRemove([nama])
+      },
+    );
+  }
+
+  Stream<DocumentSnapshot> streamMasterNotaris() {
+    return _db.collection('master_data').doc('notaris').snapshots();
+  }
+
   // ==========================================================================
   // MASTER BANK
   // ==========================================================================

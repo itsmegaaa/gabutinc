@@ -144,10 +144,7 @@ class _FormLaporanScreenState extends State<FormLaporanScreen> {
                               textEditingController.text =
                                   ctrl.namaNotarisCtrl.text;
                             }
-                            textEditingController.addListener(() {
-                              ctrl.namaNotarisCtrl.text =
-                                  textEditingController.text;
-                            });
+
                             return _buildTextField(
                               controller: textEditingController,
                               hint: 'Pilih atau ketik nama notaris',
@@ -226,8 +223,8 @@ class _FormLaporanScreenState extends State<FormLaporanScreen> {
                         const SizedBox(height: 16),
                         _buildLabel('Tanggal Order'),
                         InkWell(
-                          onTap: () => _pilihTanggal(
-                              context, ctrl.tanggalOrder, ctrl.setTanggalOrder),
+                          onTap: () => _pilihTanggal(context, ctrl.tanggalOrder,
+                              (dt) async => await ctrl.setTanggalOrder(dt)),
                           child: InputDecorator(
                             decoration:
                                 _inputDecoration('Pilih tanggal order', isDark)
