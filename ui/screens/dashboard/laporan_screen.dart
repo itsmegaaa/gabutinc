@@ -231,15 +231,19 @@ class _LaporanScreenState extends State<LaporanScreen> {
           child: const Icon(Icons.delete_sweep, color: Colors.white, size: 32),
         ),
         child: InkWell(
-          onTap: () {
-            context.read<FormLaporanController>().initForm(
+          // FIX: Tambahkan async, await, dan context.mounted
+          onTap: () async {
+            await context.read<FormLaporanController>().initForm(
                   laporanExisting: item,
                   tahunAktif: item.tahun,
                 );
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const FormLaporanScreen()),
-            );
+
+            if (context.mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FormLaporanScreen()),
+              );
+            }
           },
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
           child: Container(

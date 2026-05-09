@@ -107,11 +107,25 @@ class FormLaporanController extends ChangeNotifier {
 
   DateTime? _parseDateOrNull(String dateStr) {
     if (dateStr.isEmpty) return null;
+
+    // Coba ISO 8601 dulu (format baru)
     try {
       return DateTime.parse(dateStr);
-    } catch (_) {
-      return null;
-    }
+    } catch (_) {}
+
+    // Fallback: format lama dd-MM-yyyy
+    try {
+      final parts = dateStr.split('-');
+      if (parts.length == 3 && parts[2].length == 4) {
+        return DateTime(
+          int.parse(parts[2]),
+          int.parse(parts[1]),
+          int.parse(parts[0]),
+        );
+      }
+    } catch (_) {}
+
+    return null;
   }
 
   String _formatInputRupiah(String angkaStr) {
@@ -365,17 +379,15 @@ class FormLaporanController extends ChangeNotifier {
       final tglOrderSaja = DateTime(
           _tanggalOrder!.year, _tanggalOrder!.month, _tanggalOrder!.day);
       final hariIniSaja = DateTime(now.year, now.month, now.day);
-
       int selisihHari = hariIniSaja.difference(tglOrderSaja).inDays;
       if (selisihHari < 0) selisihHari = 0;
 
       umurPekerjaanCtrl.text = '$selisihHari Hari';
 
-      // =========================================================
-      // SESUAIKAN DENGAN HURUF KAPITAL (UPPERCASE)
-      // =========================================================
-      // Jangan ubah status jika sudah SELESAI atau BATAL
-      if (statusPekerjaan != 'SELESAI' && statusPekerjaan != 'BATAL') {
+      // FIX: Hanya auto-set status jika ini mode TAMBAH BARU, bukan Edit
+      if (!isEditMode &&
+          statusPekerjaan != 'SELESAI' &&
+          statusPekerjaan != 'BATAL') {
         if (selisihHari < 25) {
           setStatusPekerjaan('PROSES');
         } else if (selisihHari < 40) {
