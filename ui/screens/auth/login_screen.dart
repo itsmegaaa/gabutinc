@@ -1,6 +1,6 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import '../../../core/constants/app_constants.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,8 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
         email: email,
         password: password,
       );
-      // Jika berhasil, stream authStateChanges di AuthGate (main.dart)
-      // akan otomatis mendeteksi perubahan dan memindahkan user ke HomeScreen.
+      // Jika berhasil, AuthGate akan otomatis mendeteksi dan memindah user
     } on FirebaseAuthException catch (e) {
       setState(() {
         _isLoading = false;
@@ -80,225 +79,180 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Deteksi apakah sedang dalam mode gelap
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Warna permukaan kartu (Putih di mode terang, Abu gelap di mode gelap)
-    final Color cardColor =
-        isDark ? AppConstants.darkSurface : AppConstants.surfaceColor;
-
     return Scaffold(
-      backgroundColor: AppConstants.navyColor, // Background atas selalu Navy
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // ================================================================
-            // BAGIAN ATAS (HEADER & LOGO)
-            // ================================================================
-            Expanded(
-              flex: 4,
-              child: Center(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Logo Lingkaran
-                      Container(
-                        padding: const EdgeInsets.all(20),
+      body: Stack(
+        children: [
+          // BACKGROUND GRADIENT
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF0F172A), Color(0xFF020617)],
+              ),
+            ),
+          ),
+
+          // ORNAMEN CAHAYA
+          Positioned(
+            bottom: -100,
+            left: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppConstants.goldColor.withOpacity(0.05),
+              ),
+            ),
+          ),
+
+          // LOGIN FORM GLASS
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(30),
+              child: Column(
+                children: [
+                  // LOGO & TITLE
+                  const Icon(Icons.shield_outlined,
+                      color: AppConstants.goldColor, size: 80),
+                  const SizedBox(height: 15),
+                  const Text(
+                    'SIRA',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 4),
+                  ),
+                  Text(
+                    'Sistem Informasi Riwayat Administrasi',
+                    style: TextStyle(
+                        color: Colors.white.withOpacity(0.5), fontSize: 12),
+                  ),
+                  const SizedBox(height: 50),
+
+                  // CARD GLASS
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                      child: Container(
+                        padding: const EdgeInsets.all(30),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppConstants.goldColor.withOpacity(0.1),
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(30),
                           border: Border.all(
-                            color: AppConstants.goldColor.withOpacity(0.5),
-                            width: 2,
-                          ),
+                              color: Colors.white.withOpacity(0.1), width: 1.5),
                         ),
-                        child: const Icon(
-                          Icons.account_balance_rounded,
-                          size: 60,
-                          color: AppConstants.goldColor,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Judul SIRA
-                      const Text(
-                        'SIRA',
-                        style: TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 4.0,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Subtitle
-                      Text(
-                        'Sistem Informasi Riwayat Administrasi',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppConstants.goldColor.withOpacity(0.8),
-                          letterSpacing: 0.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // ================================================================
-            // BAGIAN BAWAH (FORM LOGIN)
-            // ================================================================
-            Expanded(
-              flex: 6,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, -5),
-                    )
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        'Masuk ke Akun',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Field Email
-                      TextFormField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        decoration:
-                            _inputDecoration('Email', Icons.email_outlined),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Field Password
-                      TextFormField(
-                        controller: _passwordCtrl,
-                        obscureText: !_isPasswordVisible,
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _login(),
-                        decoration:
-                            _inputDecoration('Password', Icons.lock_outline)
-                                .copyWith(
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _isPasswordVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.grey,
+                        child: Column(
+                          children: [
+                            _buildGlassInput(
+                              label: 'Username / Email',
+                              icon: Icons.alternate_email_rounded,
+                              controller: _emailCtrl,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _isPasswordVisible = !_isPasswordVisible;
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-
-                      // Pesan Error
-                      if (_errorMessage.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          _errorMessage,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-
-                      const SizedBox(height: 40),
-
-                      // Tombol Masuk
-                      SizedBox(
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppConstants.navyColor,
-                            foregroundColor: AppConstants.goldColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                  AppConstants.borderRadius),
+                            const SizedBox(height: 20),
+                            _buildGlassInput(
+                              label: 'Password',
+                              icon: Icons.lock_outline_rounded,
+                              isPassword: true,
+                              controller: _passwordCtrl,
                             ),
-                            elevation: 2,
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    color: AppConstants.goldColor,
-                                    strokeWidth: 2.5,
-                                  ),
-                                )
-                              : const Text(
-                                  'MASUK',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2,
-                                  ),
+
+                            // Pesan Error Merah
+                            if (_errorMessage.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                _errorMessage,
+                                style: const TextStyle(
+                                    color: Colors.redAccent, fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+
+                            const SizedBox(height: 40),
+
+                            SizedBox(
+                              width: double.infinity,
+                              height: 55,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppConstants.goldColor,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15)),
+                                  elevation: 0,
                                 ),
+                                onPressed: _isLoading ? null : _login,
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: CircularProgressIndicator(
+                                            color: Colors.black,
+                                            strokeWidth: 2.5),
+                                      )
+                                    : const Text(
+                                        'MASUK KE SISTEM',
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1.5),
+                                      ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  // Helper untuk styling TextField sesuai aturan desain
-  InputDecoration _inputDecoration(String hint, IconData icon) {
-    return InputDecoration(
-      hintText: hint,
-      prefixIcon: Icon(icon, color: Colors.grey),
-      filled: true,
-      fillColor: Colors.grey
-          .shade50, // Akan terlihat meski di dark mode, atau bisa disesuaikan
-      contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-        borderSide: const BorderSide(color: AppConstants.navyColor, width: 1.5),
+  Widget _buildGlassInput({
+    required String label,
+    required IconData icon,
+    bool isPassword = false,
+    required TextEditingController controller,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: isPassword && !_isPasswordVisible,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.5), size: 20),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.white.withOpacity(0.5),
+                  size: 20,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
+                },
+              )
+            : null,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.03),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: AppConstants.goldColor),
+        ),
       ),
     );
   }

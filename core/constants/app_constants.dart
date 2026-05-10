@@ -25,6 +25,7 @@ class AppConstants {
   ];
 
   static const List<String> listTahunAktif = [
+    '2023',
     '2024',
     '2025',
     '2026',

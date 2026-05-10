@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +8,7 @@ import '../../../data/models/laporan_model.dart';
 import '../../../controllers/laporan_controller.dart';
 import '../../../controllers/user_provider.dart';
 import '../../../controllers/form_laporan_controller.dart';
+import '../../screens/portal/detail_laporan_screen.dart';
 
 import '../form/form_laporan_screen.dart';
 import 'log_screen.dart';
@@ -32,15 +34,25 @@ class _LaporanScreenState extends State<LaporanScreen> {
   Widget build(BuildContext context) {
     final laporanCtrl = context.watch<LaporanController>();
     final userProv = context.watch<UserProvider>();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('LAPORAN ${laporanCtrl.tahunAktif}'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          'LAPORAN ${laporanCtrl.tahunAktif}',
+          style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1),
+        ),
+        centerTitle: true,
         actions: [
           if (userProv.isAdmin)
             IconButton(
-              icon: const Icon(Icons.sync, color: AppConstants.navyColor),
+              icon: const Icon(Icons.sync, color: AppConstants.goldColor),
               tooltip: 'Sync Manual ke Sheet',
               onPressed: () =>
                   _konfirmasiSyncManual(context, laporanCtrl, userProv.email),
@@ -50,7 +62,6 @@ class _LaporanScreenState extends State<LaporanScreen> {
       ),
       floatingActionButton: CustomExpandableFab(
         onAddTap: () {
-          // TAMBAHKAN BARIS INI: Cuci otak form agar benar-benar kosong (Mode Tambah Baru)
           context.read<FormLaporanController>().initForm(
                 laporanExisting: null,
                 tahunAktif: context.read<LaporanController>().tahunAktif,
@@ -68,83 +79,205 @@ class _LaporanScreenState extends State<LaporanScreen> {
           );
         },
       ),
-      body: Column(
+      body: Stack(
         children: [
           // ==================================================================
-          // SEARCH BAR
+          // BACKGROUND GRADIENT (Glassmorphism Base)
           // ==================================================================
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-            child: TextField(
-              controller: _searchCtrl,
-              onChanged: (value) =>
-                  context.read<LaporanController>().cariLaporan(value),
-              decoration: InputDecoration(
-                hintText: 'Cari debitur, bank, covernote...',
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                suffixIcon: _searchCtrl.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
-                        onPressed: () {
-                          _searchCtrl.clear();
-                          context.read<LaporanController>().cariLaporan('');
-                          FocusScope.of(context).unfocus();
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor:
-                    isDark ? AppConstants.darkSurface : Colors.grey.shade100,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                border: OutlineInputBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.fieldBorderRadius),
-                  borderSide: BorderSide.none,
-                ),
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF0F172A), Color(0xFF020617)],
               ),
             ),
           ),
 
           // ==================================================================
-          // FILTER CHIPS
+          // KONTEN UTAMA
           // ==================================================================
-          SizedBox(
-            height: 50,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              physics: const BouncingScrollPhysics(),
+          SafeArea(
+            child: Column(
               children: [
-                _buildFilterChip('SEMUA', laporanCtrl, isDark),
-                ...['PROSES', 'SELESAI', 'BATAL', 'PENDING', 'BERMASALAH'].map(
-                  (status) => _buildFilterChip(status, laporanCtrl, isDark),
+                // ============================================================
+                // SEARCH BAR & FILTER MENU (TERINTEGRASI)
+                // ============================================================
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(15),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _searchCtrl,
+                                style: const TextStyle(color: Colors.white),
+                                onChanged: (value) => context
+                                    .read<LaporanController>()
+                                    .cariLaporan(value),
+                                decoration: InputDecoration(
+                                  hintText: 'Cari debitur, bank, covernote...',
+                                  hintStyle: TextStyle(
+                                      color: Colors.white.withOpacity(0.4),
+                                      fontSize: 14),
+                                  prefixIcon: const Icon(Icons.search,
+                                      color: Colors.white54),
+                                  border: InputBorder.none,
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(vertical: 15),
+                                ),
+                              ),
+                            ),
+
+                            // Tombol Silang untuk Hapus Teks Search
+                            if (_searchCtrl.text.isNotEmpty)
+                              IconButton(
+                                icon: const Icon(Icons.clear,
+                                    color: Colors.white54, size: 20),
+                                onPressed: () {
+                                  _searchCtrl.clear();
+                                  context
+                                      .read<LaporanController>()
+                                      .cariLaporan('');
+                                  FocusScope.of(context).unfocus();
+                                },
+                              ),
+
+                            // Garis Pemisah Transparan
+                            Container(
+                                height: 24,
+                                width: 1,
+                                color: Colors.white.withOpacity(0.2)),
+
+                            // Menu Filter Pop-up (Menyatu dengan Search Bar)
+                            PopupMenuButton<String>(
+                              icon: Icon(
+                                Icons.filter_list_rounded,
+                                // Berubah jadi Emas kalau filter sedang aktif
+                                color: laporanCtrl.statusFilter == 'SEMUA'
+                                    ? Colors.white54
+                                    : AppConstants.goldColor,
+                              ),
+                              color: const Color(
+                                  0xFF1E293B), // Background pop-up menu
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15)),
+                              tooltip: 'Filter Status Pekerjaan',
+                              onSelected: (String status) {
+                                context
+                                    .read<LaporanController>()
+                                    .ubahFilterStatus(status);
+                              },
+                              itemBuilder: (BuildContext context) {
+                                return [
+                                  'SEMUA',
+                                  'PROSES',
+                                  'SELESAI',
+                                  'BATAL',
+                                  'PENDING',
+                                  'BERMASALAH'
+                                ].map((String choice) {
+                                  final isSelected =
+                                      laporanCtrl.statusFilter == choice;
+                                  return PopupMenuItem<String>(
+                                    value: choice,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          isSelected
+                                              ? Icons.radio_button_checked
+                                              : Icons.radio_button_off,
+                                          color: isSelected
+                                              ? AppConstants.goldColor
+                                              : Colors.white54,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          choice,
+                                          style: TextStyle(
+                                            color: isSelected
+                                                ? AppConstants.goldColor
+                                                : Colors.white,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList();
+                              },
+                            ),
+                            const SizedBox(width: 5), // Padding tipis
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // SUMMARY HEADER
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Total: ${laporanCtrl.dataLaporan.length} Berkas',
+                        style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12),
+                      ),
+                      const Spacer(),
+                      // Teks indikator kecil jika filter aktif
+                      if (laporanCtrl.statusFilter != 'SEMUA')
+                        Text(
+                          'Filter: ${laporanCtrl.statusFilter}',
+                          style: const TextStyle(
+                              color: AppConstants.goldColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // LIST DATA
+                Expanded(
+                  child: laporanCtrl.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                              color: AppConstants.goldColor),
+                        )
+                      : laporanCtrl.dataLaporan.isEmpty
+                          ? _buildEmptyState()
+                          : ListView.builder(
+                              physics: const BouncingScrollPhysics(),
+                              padding: const EdgeInsets.only(
+                                  left: 20, right: 20, bottom: 100),
+                              itemCount: laporanCtrl.dataLaporan.length,
+                              itemBuilder: (context, index) {
+                                final item = laporanCtrl.dataLaporan[index];
+                                return _buildListCard(context, item, userProv);
+                              },
+                            ),
                 ),
               ],
             ),
-          ),
-
-          // ==================================================================
-          // LIST DATA
-          // ==================================================================
-          Expanded(
-            child: laporanCtrl.isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                        color: AppConstants.goldColor),
-                  )
-                : laporanCtrl.dataLaporan.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.only(
-                            left: 20, right: 20, bottom: 100),
-                        itemCount: laporanCtrl.dataLaporan.length,
-                        itemBuilder: (context, index) {
-                          final item = laporanCtrl.dataLaporan[index];
-                          return _buildListCard(
-                              context, item, userProv, isDark);
-                        },
-                      ),
           ),
         ],
       ),
@@ -155,55 +288,26 @@ class _LaporanScreenState extends State<LaporanScreen> {
   // WIDGET HELPERS
   // ==========================================================================
 
-  Widget _buildFilterChip(String label, LaporanController ctrl, bool isDark) {
-    final isSelected = ctrl.statusFilter == label;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: ChoiceChip(
-        label: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected
-                ? AppConstants.goldColor
-                : (isDark ? Colors.white70 : Colors.grey.shade700),
-          ),
-        ),
-        selected: isSelected,
-        selectedColor: AppConstants.navyColor,
-        backgroundColor: isDark ? AppConstants.darkSurface : Colors.white,
-        side: BorderSide(
-          color: isSelected ? AppConstants.navyColor : Colors.grey.shade300,
-        ),
-        onSelected: (selected) {
-          if (selected) {
-            context.read<LaporanController>().ubahFilterStatus(label);
-          }
-        },
-      ),
-    );
-  }
-
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.folder_off_outlined,
-              size: 80, color: Colors.grey.shade400),
+              size: 80, color: Colors.white.withOpacity(0.2)),
           const SizedBox(height: 16),
           Text(
             'Tidak ada data ditemukan.',
-            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+            style:
+                TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.5)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildListCard(BuildContext context, LaporanModel item,
-      UserProvider userProv, bool isDark) {
+  Widget _buildListCard(
+      BuildContext context, LaporanModel item, UserProvider userProv) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Dismissible(
@@ -226,98 +330,101 @@ class _LaporanScreenState extends State<LaporanScreen> {
           padding: const EdgeInsets.only(right: 20),
           decoration: BoxDecoration(
             color: Colors.red.shade400,
-            borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: const Icon(Icons.delete_sweep, color: Colors.white, size: 32),
         ),
-        child: InkWell(
-          // FIX: Tambahkan async, await, dan context.mounted
-          onTap: () async {
-            await context.read<FormLaporanController>().initForm(
-                  laporanExisting: item,
-                  tahunAktif: item.tahun,
-                );
-
-            if (context.mounted) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FormLaporanScreen()),
-              );
-            }
-          },
-          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color:
-                  isDark ? AppConstants.darkSurface : AppConstants.surfaceColor,
-              borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-              boxShadow: [AppConstants.primaryShadow],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Baris 1: Nama Debitur & Status/Sync Icon
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.namaDebitur,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DetailLaporanScreen(item: item),
                       ),
-                    ),
-                    if (!item.sudahSyncSheet) ...[
-                      Tooltip(
-                        message: 'Belum tersinkronisasi ke Sheet',
-                        child: Icon(Icons.sync_problem,
-                            size: 18, color: Colors.orange.shade700),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    _buildStatusBadge(item.statusPekerjaan),
-                  ],
-                ),
-                const SizedBox(height: 6),
-
-                // Baris 2: Bank & Notaris
-                Text(
-                  '${item.namaBank} • ${item.namaNotaris}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Divider(height: 1),
-                ),
-
-                // Baris 3: Tgl Pelaksanaan & Batas SLA
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.calendar_month,
-                            size: 14, color: Colors.grey.shade500),
-                        const SizedBox(width: 4),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.namaDebitur.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                            if (!item.sudahSyncSheet) ...[
+                              const Tooltip(
+                                message: 'Belum tersinkronisasi ke Sheet',
+                                child: Icon(Icons.sync_problem,
+                                    size: 18, color: Colors.orangeAccent),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            _buildStatusBadge(item.statusPekerjaan),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
                         Text(
-                          _formatTanggalTampil(item.tanggalPelaksanaan),
+                          '${item.namaBank} • ${item.namaNotaris}',
                           style: TextStyle(
-                              fontSize: 12, color: Colors.grey.shade600),
+                              fontSize: 13,
+                              color: Colors.white.withOpacity(0.6)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          child: Divider(color: Colors.white10, height: 1),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.calendar_month,
+                                    size: 14,
+                                    color: Colors.white.withOpacity(0.5)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatTanggalTampil(item.tanggalPelaksanaan),
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white.withOpacity(0.6)),
+                                ),
+                              ],
+                            ),
+                            _buildSlaIndicator(item.tanggalPelaksanaan,
+                                item.batasSla, item.statusPekerjaan),
+                          ],
                         ),
                       ],
                     ),
-                    _buildSlaIndicator(item.tanggalPelaksanaan, item.batasSla,
-                        item.statusPekerjaan),
-                  ],
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -331,31 +438,25 @@ class _LaporanScreenState extends State<LaporanScreen> {
 
     switch (status.toUpperCase()) {
       case 'SELESAI':
-        bgColor = Colors.green.shade50;
-        textColor = Colors.green.shade700;
+        bgColor = Colors.greenAccent.withOpacity(0.2);
+        textColor = Colors.greenAccent;
         break;
       case 'PROSES':
       case 'PROSES TANDATANGAN':
-        bgColor = Colors.blue.shade50;
-        textColor = Colors.blue.shade700;
+        bgColor = Colors.blueAccent.withOpacity(0.2);
+        textColor = Colors.blueAccent;
         break;
       case 'BATAL':
-        bgColor = Colors.red.shade50;
-        textColor = Colors.red.shade700;
+        bgColor = Colors.redAccent.withOpacity(0.2);
+        textColor = Colors.redAccent;
         break;
       case 'PENDING':
-        bgColor = Colors.orange.shade50;
-        textColor = Colors.orange.shade700;
+        bgColor = Colors.orangeAccent.withOpacity(0.2);
+        textColor = Colors.orangeAccent;
         break;
       default:
-        bgColor = Colors.grey.shade100;
-        textColor = Colors.grey.shade700;
-    }
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (isDark) {
-      bgColor = bgColor.withOpacity(0.1);
-      textColor = textColor.withOpacity(0.9);
+        bgColor = Colors.white.withOpacity(0.1);
+        textColor = Colors.white70;
     }
 
     return Container(
@@ -363,6 +464,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: textColor.withOpacity(0.5)),
       ),
       child: Text(
         status.isEmpty ? '-' : status,
@@ -372,7 +474,6 @@ class _LaporanScreenState extends State<LaporanScreen> {
     );
   }
 
-  // REVISI LOGIKA SLA: Menghitung jarak dari hari ini ke "Batas SLA Laporan" (Format Tanggal)
   Widget _buildSlaIndicator(
       String tanggalPelaksanaanStr, String batasSlaStr, String status) {
     if (tanggalPelaksanaanStr.isEmpty ||
@@ -382,13 +483,12 @@ class _LaporanScreenState extends State<LaporanScreen> {
       return const SizedBox.shrink();
     }
 
-    DateTime? _parseFlexibleDate(String dateStr) {
+    DateTime? parseFlexibleDate(String dateStr) {
       if (dateStr.isEmpty) return null;
       try {
-        return DateTime.parse(dateStr); // Coba ISO 8601
+        return DateTime.parse(dateStr);
       } catch (_) {}
       try {
-        // Fallback data lama
         final parts = dateStr.split('-');
         if (parts.length == 3) {
           return DateTime(
@@ -399,21 +499,20 @@ class _LaporanScreenState extends State<LaporanScreen> {
     }
 
     try {
-      final tglBatasSla = _parseFlexibleDate(batasSlaStr);
-
+      final tglBatasSla = parseFlexibleDate(batasSlaStr);
       if (tglBatasSla == null)
         throw const FormatException('Format tanggal tidak valid');
 
       final sisaWaktu = tglBatasSla.difference(DateTime.now()).inDays;
 
-      Color warnaSla = AppConstants.navyColor;
+      Color warnaSla = AppConstants.goldColor;
       String pesanSla = 'Sisa $sisaWaktu hari';
 
       if (sisaWaktu < 0) {
-        warnaSla = Colors.red;
+        warnaSla = Colors.redAccent;
         pesanSla = 'Overdue ${sisaWaktu.abs()} hari';
       } else if (sisaWaktu <= 3) {
-        warnaSla = Colors.orange.shade700;
+        warnaSla = Colors.orangeAccent;
       }
 
       return Row(
@@ -428,19 +527,16 @@ class _LaporanScreenState extends State<LaporanScreen> {
         ],
       );
     } catch (_) {
-      // Fallback jika batasSlaStr ternyata tidak bisa di-parse sebagai tanggal
-      // (misal diisi teks manual oleh user)
       return Row(
         children: [
-          const Icon(Icons.timer_outlined,
-              size: 14, color: AppConstants.navyColor),
+          const Icon(Icons.timer_outlined, size: 14, color: Colors.white70),
           const SizedBox(width: 4),
           Text(
             'SLA: $batasSlaStr',
             style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: AppConstants.navyColor),
+                color: Colors.white70),
           ),
         ],
       );
@@ -457,28 +553,37 @@ class _LaporanScreenState extends State<LaporanScreen> {
     }
   }
 
-  // ==========================================================================
-  // DIALOGS
-  // ==========================================================================
-
   Future<bool?> _konfirmasiHapus(BuildContext context, String nama) {
     return showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Hapus Data'),
-        content: Text(
-            'Apakah Anda yakin ingin menghapus data debitur $nama secara permanen?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+      builder: (ctx) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: Colors.white10)),
+          title:
+              const Text('Hapus Data', style: TextStyle(color: Colors.white)),
+          content: Text(
+              'Apakah Anda yakin ingin menghapus data debitur $nama secara permanen?',
+              style: const TextStyle(color: Colors.white70)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child:
+                  const Text('Batal', style: TextStyle(color: Colors.white38)),
+            ),
+            ElevatedButton(
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Hapus',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -487,38 +592,37 @@ class _LaporanScreenState extends State<LaporanScreen> {
       BuildContext context, LaporanController ctrl, String email) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Sinkronisasi Manual'),
-        content: Text(
-            'Tarik pembaruan data tahun ${ctrl.tahunAktif} ke Google Sheet sekarang?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppConstants.navyColor,
-              foregroundColor: AppConstants.goldColor,
+      builder: (ctx) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: Colors.white10)),
+          title:
+              const Text('Sinkronisasi', style: TextStyle(color: Colors.white)),
+          content: Text(
+              'Tarik pembaruan data tahun ${ctrl.tahunAktif} ke Google Sheet sekarang?',
+              style: const TextStyle(color: Colors.white70)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child:
+                  const Text('Batal', style: TextStyle(color: Colors.white38)),
             ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              ctrl.triggerSyncManual(email).then((_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Permintaan sync berhasil dikirim.'),
-                      backgroundColor: Colors.green),
-                );
-              }).catchError((e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('Gagal: $e'), backgroundColor: Colors.red),
-                );
-              });
-            },
-            child: const Text('Sinkronkan'),
-          ),
-        ],
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppConstants.goldColor),
+              onPressed: () {
+                Navigator.pop(ctx);
+                ctrl.triggerSyncManual(email);
+              },
+              child: const Text('Ya, Sync',
+                  style: TextStyle(
+                      color: Colors.black, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       ),
     );
   }
