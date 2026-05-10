@@ -1,3 +1,8 @@
+// ============================================================================
+// SIRA SYNC — Google Apps Script v1.0
+// Sinkronisasi Dua Arah: Firestore ↔ Google Spreadsheet
+// ============================================================================
+
 const FIREBASE_PROJECT_ID = 'GANTI_DENGAN_PROJECT_ID';
 const SHEET_NAMES = {
   '2024': 'Data 2024',
@@ -14,8 +19,9 @@ const HEADER_ROW = [
   'UPDATED BY', 'LAST UPDATE'
 ];
 
-
+// ============================================================================
 // 1. ENDPOINT UTAMA — Dipanggil Flutter via HTTP POST
+// ============================================================================
 function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents);
@@ -29,7 +35,9 @@ function doPost(e) {
   }
 }
 
+// ============================================================================
 // 2. FIRESTORE → SPREADSHEET
+// ============================================================================
 function syncFromFirebase(tahun) {
   const sheetName = SHEET_NAMES[tahun];
   if (!sheetName) throw new Error('Tahun tidak dikenal: ' + tahun);
@@ -89,7 +97,9 @@ function syncFromFirebase(tahun) {
   Logger.log('Sync selesai: ' + rows.length + ' dokumen untuk tahun ' + tahun);
 }
 
+// ============================================================================
 // 3. SPREADSHEET → FIRESTORE (Trigger onEdit)
+// ============================================================================
 function onEdit(e) {
   const sheet = e.source.getActiveSheet();
   const sheetName = sheet.getName();
@@ -106,7 +116,9 @@ function onEdit(e) {
     .setValue(new Date().toLocaleString('id-ID'));
 }
 
+// ============================================================================
 // 4. JADWAL OTOMATIS — Daftarkan via setupTimeTrigger()
+// ============================================================================
 function syncHarian() {
   const tahun = new Date().getFullYear().toString();
   syncFromFirebase(tahun);
@@ -127,7 +139,10 @@ function setupTimeTrigger() {
   Logger.log('Time trigger berhasil didaftarkan (08:00 & 17:00)');
 }
 
+// ============================================================================
 // HELPER FUNCTIONS
+// ============================================================================
+
 function _getAllDocumentsFromFirestore(collectionId) {
   const token = ScriptApp.getOAuthToken();
   const baseUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${collectionId}`;

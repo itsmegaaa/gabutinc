@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       drawer: const CustomDrawer(),
       appBar: AppBar(
-        title: const Text('Sistem Informasi Riwayat Administrasi'),
+        title: const Text('SIRA'),
         centerTitle: true,
         actions: [
           Builder(
