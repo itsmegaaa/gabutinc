@@ -6,6 +6,7 @@ secrets/
 *.pem
 *.key
 *.p12
+*.gs
 
 # Android local config
 android/local.properties
