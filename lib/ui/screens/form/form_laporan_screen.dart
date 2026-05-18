@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, curly_braces_in_flow_control_structures, use_build_context_synchronously, use_super_parameters
+
 import 'dart:ui'; // Tambahan wajib untuk efek blur kaca (Glassmorphism)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

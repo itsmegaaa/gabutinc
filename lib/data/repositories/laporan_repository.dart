@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
+import '../../core/utils/web_sync_launcher.dart';
 import '../models/laporan_model.dart';
 
 class LaporanRepository {
@@ -80,11 +81,11 @@ class LaporanRepository {
     });
   }
 
-// ==========================================================================
+  // ==========================================================================
   // SINKRONISASI MANUAL (APPS SCRIPT TRIGGER)
   // ==========================================================================
 
-  Future<void> triggerSyncKeSheet() async {
+  Future<void> triggerSyncKeSheet(String tahun) async {
     try {
       // FIX MEDIUM (Security): Ambil URL Apps Script dengan aman dari Firestore
       final doc = await _db.collection('master_data').doc('config').get();
@@ -99,26 +100,106 @@ class LaporanRepository {
         throw Exception('URL Apps Script belum disetel di Firebase.');
       }
 
-      // Gunakan URL yang didapat dari database
-      await http.post(
-        Uri.parse(webAppUrl),
-        body: jsonEncode({'action': 'sync_from_firebase'}),
-      );
-    } catch (e) {
-      if (e.toString().contains('Failed to fetch') ||
-          e.toString().contains('XMLHttpRequest error')) {
-        debugPrint(
-            'Abaikan error CORS. Eksekusi di Google Apps Script tetap berjalan.');
-
-        await _db.collection('sync_metadata').doc('status').set(
-            {'lastSyncToSheet': FieldValue.serverTimestamp()},
-            SetOptions(merge: true));
-
+      if (kIsWeb) {
+        await _sendWebSyncRequest(webAppUrl, tahun);
         return;
+      }
+
+      final response = await _sendSyncRequest(webAppUrl, tahun);
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception(
+            'Apps Script gagal merespons sync (${response.statusCode}): ${response.body}');
+      }
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic> || decoded['status'] != 'ok') {
+        final message = decoded is Map<String, dynamic>
+            ? decoded['message'] ?? response.body
+            : response.body;
+        throw Exception('Apps Script gagal sync: $message');
+      }
+    } catch (e) {
+      if (kIsWeb &&
+          (e.toString().contains('Failed to fetch') ||
+              e.toString().contains('XMLHttpRequest error'))) {
+        throw Exception(
+            'Request ke Apps Script gagal/CORS. Cek Apps Script Executions untuk memastikan sync berjalan.');
       }
 
       rethrow;
     }
+  }
+
+  Future<void> _sendWebSyncRequest(String webAppUrl, String tahun) async {
+    final before = await _db.collection('sync_metadata').doc('status').get();
+    final beforeLastSync = _timestampMillis(before.data()?['lastSyncToSheet']);
+    final beforeError = before.data()?['syncError'] as String?;
+
+    final syncUrl = _buildSyncGetUri(webAppUrl, tahun).toString();
+    await launchAppsScriptSync(syncUrl);
+
+    final deadline = DateTime.now().add(const Duration(seconds: 90));
+
+    while (DateTime.now().isBefore(deadline)) {
+      await Future<void>.delayed(const Duration(seconds: 2));
+
+      final statusDoc =
+          await _db.collection('sync_metadata').doc('status').get();
+      final data = statusDoc.data();
+      if (data == null) continue;
+
+      final syncError = data['syncError'] as String?;
+      if (syncError != null &&
+          syncError.trim().isNotEmpty &&
+          syncError != beforeError) {
+        throw Exception('Apps Script gagal sync: $syncError');
+      }
+
+      final statusTahun = data['tahun']?.toString();
+      final lastSync = _timestampMillis(data['lastSyncToSheet']);
+      final isDone = data['isSyncing'] == false &&
+          statusTahun == tahun &&
+          lastSync != null &&
+          lastSync != beforeLastSync;
+
+      if (isDone) return;
+    }
+
+    throw Exception(
+        'Request sync sudah dikirim, tetapi status sukses belum terkonfirmasi. Cek Apps Script Executions.');
+  }
+
+  Future<http.Response> _sendSyncRequest(String webAppUrl, String tahun) {
+    final uri = Uri.parse(webAppUrl);
+
+    return http
+        .post(
+          uri,
+          headers: const {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'action': 'sync_from_firebase',
+            'tahun': tahun,
+          }),
+        )
+        .timeout(const Duration(seconds: 60));
+  }
+
+  Uri _buildSyncGetUri(String webAppUrl, String tahun) {
+    final uri = Uri.parse(webAppUrl);
+    final query = Map<String, String>.from(uri.queryParameters)
+      ..['action'] = 'sync_from_firebase'
+      ..['tahun'] = tahun;
+
+    return uri.replace(queryParameters: query);
+  }
+
+  int? _timestampMillis(Object? value) {
+    if (value is Timestamp) {
+      return value.millisecondsSinceEpoch;
+    }
+
+    return null;
   }
 
   // ==========================================================================

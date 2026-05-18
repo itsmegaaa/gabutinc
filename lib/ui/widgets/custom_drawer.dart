@@ -1,3 +1,5 @@
+// ignore_for_file: curly_braces_in_flow_control_structures, no_leading_underscores_for_local_identifiers, deprecated_member_use, use_super_parameters
+
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +16,7 @@ class CustomDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userProv = context.watch<UserProvider>();
+    final laporanCtrl = context.watch<LaporanController>();
 
     return Drawer(
       backgroundColor: Colors.transparent,
@@ -104,10 +107,15 @@ class CustomDrawer extends StatelessWidget {
 
                       if (userProv.isAdmin)
                         _buildDrawerItem(
-                          icon: Icons.sync_rounded,
-                          title: 'SYNC KE GOOGLE SHEET',
+                          icon: laporanCtrl.isSyncManual
+                              ? Icons.hourglass_top_rounded
+                              : Icons.sync_rounded,
+                          title: laporanCtrl.isSyncManual
+                              ? 'SYNC SEDANG BERJALAN'
+                              : 'SYNC KE GOOGLE SHEET',
                           color: AppConstants.goldColor,
                           onTap: () {
+                            if (laporanCtrl.isSyncManual) return;
                             Navigator.pop(context);
                             _konfirmasiSyncManual(context, userProv.email);
                           },
@@ -267,9 +275,31 @@ class CustomDrawer extends StatelessWidget {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                   backgroundColor: AppConstants.goldColor),
-              onPressed: () {
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 Navigator.pop(ctx);
-                ctrl.triggerSyncManual(email);
+                try {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      duration: const Duration(seconds: 3),
+                      content: Text(
+                          'Sinkronisasi tahun ${ctrl.tahunAktif} sedang dimulai...'),
+                    ),
+                  );
+                  await ctrl.triggerSyncManual(email);
+                  if (!context.mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'Permintaan sync tahun ${ctrl.tahunAktif} dikirim.'),
+                    ),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('Gagal sync manual: $e')),
+                  );
+                }
               },
               child: const Text('Ya, Sync',
                   style: TextStyle(

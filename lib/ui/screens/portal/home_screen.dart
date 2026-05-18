@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors, curly_braces_in_flow_control_structures, deprecated_member_use, use_super_parameters
+
 import 'dart:ui'; // Wajib untuk ImageFilter
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -298,16 +300,29 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(width: 15),
         Expanded(
           child: GestureDetector(
-            onTap: () =>
-                _handleManualSync(context, context.read<UserProvider>().email),
+            onTap: ctrl.isSyncManual
+                ? null
+                : () => _handleManualSync(
+                      context,
+                      context.read<UserProvider>().email,
+                    ),
             child: _buildGlassCard(
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Column(
-                  children: const [
-                    Icon(Icons.cloud_sync_rounded,
-                        color: AppConstants.goldColor, size: 30),
-                    SizedBox(height: 8),
+                  children: [
+                    ctrl.isSyncManual
+                        ? const SizedBox(
+                            width: 30,
+                            height: 30,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: AppConstants.goldColor,
+                            ),
+                          )
+                        : const Icon(Icons.cloud_sync_rounded,
+                            color: AppConstants.goldColor, size: 30),
+                    const SizedBox(height: 8),
                     Text('SYNC SHEET',
                         style: TextStyle(
                             color: Colors.white,
@@ -360,10 +375,15 @@ class HomeScreen extends StatelessWidget {
           if (data['isSyncing'] == true) {
             msg = "Sedang sinkronisasi ke Google Sheets...";
           } else {
+            final syncError = data['syncError'] as String?;
             final last = data['lastSyncToSheet'] as Timestamp?;
-            msg = last != null
-                ? "Terakhir Sync: ${DateFormat('HH:mm - dd/MM').format(last.toDate())}"
-                : "Belum pernah sync";
+            if (syncError != null && syncError.trim().isNotEmpty) {
+              msg = "Sync gagal: $syncError";
+            } else {
+              msg = last != null
+                  ? "Terakhir Sync: ${DateFormat('HH:mm - dd/MM').format(last.toDate())}"
+                  : "Belum pernah sync";
+            }
           }
         }
         return _buildGlassCard(
@@ -374,11 +394,17 @@ class HomeScreen extends StatelessWidget {
                 const Icon(Icons.verified_user_outlined,
                     color: Colors.blueAccent, size: 20),
                 const SizedBox(width: 12),
-                Text(msg,
+                Expanded(
+                  child: Text(
+                    msg,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         color: Colors.white.withOpacity(0.8),
                         fontSize: 13,
-                        fontWeight: FontWeight.w500)),
+                        fontWeight: FontWeight.w500),
+                  ),
+                ),
               ],
             ),
           ),
@@ -410,9 +436,32 @@ class HomeScreen extends StatelessWidget {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                   backgroundColor: AppConstants.goldColor),
-              onPressed: () {
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final ctrl = context.read<LaporanController>();
                 Navigator.pop(ctx);
-                context.read<LaporanController>().triggerSyncManual(email);
+                try {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      duration: const Duration(seconds: 3),
+                      content: Text(
+                          'Sinkronisasi tahun ${ctrl.tahunAktif} sedang dimulai...'),
+                    ),
+                  );
+                  await ctrl.triggerSyncManual(email);
+                  if (!context.mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'Permintaan sync tahun ${ctrl.tahunAktif} dikirim.'),
+                    ),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('Gagal sync manual: $e')),
+                  );
+                }
               },
               child: const Text('Ya, Sync',
                   style: TextStyle(

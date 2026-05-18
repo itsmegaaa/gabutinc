@@ -1,0 +1,51 @@
+2026/05/10-00:15:24.509 1054 Reusing MANIFEST C:\Users\COMPUT~1\AppData\Local\Temp\flutter_tools.d0d61f35\flutter_tools_chrome_device.353d0592\Default\IndexedDB\http_localhost_56396.indexeddb.leveldb/MANIFEST-000001
+2026/05/10-00:15:24.509 1054 Recovering log #49
+2026/05/10-00:15:24.536 1054 Reusing old log C:\Users\COMPUT~1\AppData\Local\Temp\flutter_tools.d0d61f35\flutter_tools_chrome_device.353d0592\Default\IndexedDB\http_localhost_56396.indexeddb.leveldb/000049.log 
+2026/05/10-00:15:24.537 1054 Delete type=2 #47
+2026/05/10-00:15:24.537 1054 Delete type=2 #50
+2026/05/10-00:15:24.551 5e4 Level-0 table #54: started
+2026/05/10-00:15:24.556 5e4 Level-0 table #54: 55039 bytes OK
+2026/05/10-00:15:24.558 5e4 Delete type=0 #49
+2026/05/10-00:15:24.558 5e4 Manual compaction at level-0 from '\x00\x0c\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0d\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/05/10-00:15:26.073 1054 Compacting 1@1 + 1@2 files
+2026/05/10-00:15:26.107 1054 Generated table #55@1: 7960 keys, 866122 bytes
+2026/05/10-00:15:26.107 1054 Compacted 1@1 + 1@2 files => 866122 bytes
+2026/05/10-00:15:26.108 1054 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/05/10-00:23:54.845 1054 Level-0 table #57: started
+2026/05/10-00:23:54.875 1054 Level-0 table #57: 1012627 bytes OK
+2026/05/10-00:23:54.877 1054 Delete type=2 #51
+2026/05/10-00:23:54.877 1054 Delete type=0 #53
+2026/05/10-00:23:54.877 1054 Delete type=2 #54
+2026/05/10-00:23:58.024 1054 Compacting 1@1 + 1@2 files
+2026/05/10-00:23:58.119 1054 Generated table #58@1: 9660 keys, 1071275 bytes
+2026/05/10-00:23:58.119 1054 Compacted 1@1 + 1@2 files => 1071275 bytes
+2026/05/10-00:23:58.120 1054 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/05/10-00:23:58.120 1054 Delete type=2 #55
+2026/05/10-00:23:58.121 1054 Delete type=2 #57
+2026/05/10-00:28:44.865 1054 Level-0 table #60: started
+2026/05/10-00:28:44.899 1054 Level-0 table #60: 1024844 bytes OK
+2026/05/10-00:28:44.901 1054 Delete type=0 #56
+2026/05/10-00:28:47.409 1054 Compacting 1@1 + 1@2 files
+2026/05/10-00:28:47.464 1054 Generated table #61@1: 11541 keys, 1296409 bytes
+2026/05/10-00:28:47.465 1054 Compacted 1@1 + 1@2 files => 1296409 bytes
+2026/05/10-00:28:47.466 1054 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/05/10-00:28:47.466 1054 Delete type=2 #58
+2026/05/10-00:28:47.466 1054 Delete type=2 #60
+2026/05/10-00:34:15.447 1054 Level-0 table #63: started
+2026/05/10-00:34:15.499 1054 Level-0 table #63: 1046387 bytes OK
+2026/05/10-00:34:15.501 1054 Delete type=0 #59
+2026/05/10-00:34:21.024 1054 Compacting 1@1 + 1@2 files
+2026/05/10-00:34:21.126 1054 Generated table #64@1: 13756 keys, 1558169 bytes
+2026/05/10-00:34:21.126 1054 Compacted 1@1 + 1@2 files => 1558169 bytes
+2026/05/10-00:34:21.127 1054 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/05/10-00:34:21.127 1054 Delete type=2 #61
+2026/05/10-00:34:21.127 1054 Delete type=2 #63
+2026/05/10-00:39:17.291 1054 Level-0 table #66: started
+2026/05/10-00:39:17.342 1054 Level-0 table #66: 1029241 bytes OK
+2026/05/10-00:39:17.345 1054 Delete type=0 #62
+2026/05/10-00:39:20.155 1054 Compacting 1@1 + 1@2 files
+2026/05/10-00:39:20.252 1054 Generated table #67@1: 15716 keys, 1793454 bytes
+2026/05/10-00:39:20.252 1054 Compacted 1@1 + 1@2 files => 1793454 bytes
+2026/05/10-00:39:20.253 1054 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/05/10-00:39:20.254 1054 Delete type=2 #64
+2026/05/10-00:39:20.254 1054 Delete type=2 #66

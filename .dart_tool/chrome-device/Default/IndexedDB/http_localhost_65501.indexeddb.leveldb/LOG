@@ -1,0 +1,33 @@
+2026/05/10-01:28:12.324 319c Creating DB C:\Users\COMPUT~1\AppData\Local\Temp\flutter_tools.a6b65882\flutter_tools_chrome_device.9537dbd2\Default\IndexedDB\http_localhost_65501.indexeddb.leveldb since it was missing.
+2026/05/10-01:28:12.336 319c Reusing MANIFEST C:\Users\COMPUT~1\AppData\Local\Temp\flutter_tools.a6b65882\flutter_tools_chrome_device.9537dbd2\Default\IndexedDB\http_localhost_65501.indexeddb.leveldb/MANIFEST-000001
+2026/05/10-01:28:12.367 31d8 Level-0 table #5: started
+2026/05/10-01:28:12.373 31d8 Level-0 table #5: 1284 bytes OK
+2026/05/10-01:28:12.376 31d8 Delete type=0 #3
+2026/05/10-01:28:12.377 2ec8 Manual compaction at level-0 from '\x00\x01\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/05/10-02:47:39.281 319c Level-0 table #7: started
+2026/05/10-02:47:39.343 319c Level-0 table #7: 788649 bytes OK
+2026/05/10-02:47:39.346 319c Delete type=0 #4
+2026/05/10-02:48:47.525 f8c Compacting 1@1 + 1@2 files
+2026/05/10-02:48:47.581 f8c Generated table #8@1: 1373 keys, 137923 bytes
+2026/05/10-02:48:47.581 f8c Compacted 1@1 + 1@2 files => 137923 bytes
+2026/05/10-02:48:47.583 f8c compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/05/10-02:48:47.583 f8c Delete type=2 #5
+2026/05/10-02:48:47.584 f8c Delete type=2 #7
+2026/05/10-03:12:12.057 319c Level-0 table #10: started
+2026/05/10-03:12:12.089 319c Level-0 table #10: 1046678 bytes OK
+2026/05/10-03:12:12.090 319c Delete type=0 #6
+2026/05/10-03:12:12.109 319c Compacting 1@1 + 1@2 files
+2026/05/10-03:12:12.147 319c Generated table #11@1: 6588 keys, 741281 bytes
+2026/05/10-03:12:12.147 319c Compacted 1@1 + 1@2 files => 741281 bytes
+2026/05/10-03:12:12.148 319c compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/05/10-03:12:20.309 319c Level-0 table #13: started
+2026/05/10-03:12:20.338 319c Level-0 table #13: 1054159 bytes OK
+2026/05/10-03:12:20.340 319c Delete type=2 #8
+2026/05/10-03:12:20.340 319c Delete type=0 #9
+2026/05/10-03:12:20.340 319c Delete type=2 #10
+2026/05/10-03:12:20.347 319c Compacting 1@1 + 1@2 files
+2026/05/10-03:12:20.411 319c Generated table #14@1: 21385 keys, 1548553 bytes
+2026/05/10-03:12:20.411 319c Compacted 1@1 + 1@2 files => 1548553 bytes
+2026/05/10-03:12:20.412 319c compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/05/10-03:12:20.412 319c Delete type=2 #11
+2026/05/10-03:12:20.412 319c Delete type=2 #13

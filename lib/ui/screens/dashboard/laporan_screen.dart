@@ -1,3 +1,5 @@
+// ignore_for_file: curly_braces_in_flow_control_structures, deprecated_member_use, use_super_parameters
+
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -52,10 +54,24 @@ class _LaporanScreenState extends State<LaporanScreen> {
         actions: [
           if (userProv.isAdmin)
             IconButton(
-              icon: const Icon(Icons.sync, color: AppConstants.goldColor),
+              icon: laporanCtrl.isSyncManual
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppConstants.goldColor,
+                      ),
+                    )
+                  : const Icon(Icons.sync, color: AppConstants.goldColor),
               tooltip: 'Sync Manual ke Sheet',
-              onPressed: () =>
-                  _konfirmasiSyncManual(context, laporanCtrl, userProv.email),
+              onPressed: laporanCtrl.isSyncManual
+                  ? null
+                  : () => _konfirmasiSyncManual(
+                        context,
+                        laporanCtrl,
+                        userProv.email,
+                      ),
             ),
           const SizedBox(width: 8),
         ],
@@ -613,9 +629,31 @@ class _LaporanScreenState extends State<LaporanScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                   backgroundColor: AppConstants.goldColor),
-              onPressed: () {
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 Navigator.pop(ctx);
-                ctrl.triggerSyncManual(email);
+                try {
+                  messenger.showSnackBar(
+                    SnackBar(
+                      duration: const Duration(seconds: 3),
+                      content: Text(
+                          'Sinkronisasi tahun ${ctrl.tahunAktif} sedang dimulai...'),
+                    ),
+                  );
+                  await ctrl.triggerSyncManual(email);
+                  if (!context.mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'Permintaan sync tahun ${ctrl.tahunAktif} dikirim.'),
+                    ),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('Gagal sync manual: $e')),
+                  );
+                }
               },
               child: const Text('Ya, Sync',
                   style: TextStyle(

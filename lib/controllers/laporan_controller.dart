@@ -20,6 +20,7 @@ class LaporanController extends ChangeNotifier {
   StreamSubscription<List<LaporanModel>>? _streamSub;
   bool _isDisposed = false;
   bool _isLoading = true;
+  bool _isSyncManual = false;
 
   LaporanController({required LaporanRepository repo}) : _repo = repo {
     mulaiListen();
@@ -30,6 +31,7 @@ class LaporanController extends ChangeNotifier {
   String get tahunAktif => _tahunAktif;
   String get statusFilter => _statusFilter;
   bool get isLoading => _isLoading;
+  bool get isSyncManual => _isSyncManual;
 
   // Statistik untuk HomeScreen (REVISI tanggalPelaksanaan)
   int get totalBulanIni {
@@ -132,15 +134,25 @@ class LaporanController extends ChangeNotifier {
   }
 
   Future<void> triggerSyncManual(String userEmail) async {
+    if (_isSyncManual) return;
+
+    _isSyncManual = true;
+    notifyListeners();
+
     try {
       await _repo.catatAktivitas(
           'SYNC',
           'Meminta sinkronisasi manual ke Spreadsheet untuk data $_tahunAktif',
           userEmail);
-      await _repo.triggerSyncKeSheet();
+      await _repo.triggerSyncKeSheet(_tahunAktif);
     } catch (e) {
       debugPrint('Gagal sync manual: $e');
       rethrow;
+    } finally {
+      if (!_isDisposed) {
+        _isSyncManual = false;
+        notifyListeners();
+      }
     }
   }
 
