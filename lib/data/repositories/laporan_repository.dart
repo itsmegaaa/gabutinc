@@ -167,7 +167,8 @@ class LaporanRepository {
     }
 
     throw Exception(
-        'Request sync sudah dikirim, tetapi status sukses belum terkonfirmasi. Cek Apps Script Executions.');
+        'Request sync sudah dikirim, tetapi status sukses belum terkonfirmasi. '
+        'Buka URL ini untuk cek response Apps Script: $syncUrl');
   }
 
   Future<http.Response> _sendSyncRequest(String webAppUrl, String tahun) {

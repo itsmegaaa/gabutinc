@@ -3,13 +3,13 @@
 import 'dart:html' as html;
 
 Future<void> launchAppsScriptSync(String url) async {
-  final image = html.ImageElement()
+  final iframe = html.IFrameElement()
     ..src = url
     ..style.display = 'none';
 
-  html.document.body?.append(image);
+  html.document.body?.append(iframe);
 
   Future<void>.delayed(const Duration(seconds: 30), () {
-    image.remove();
+    iframe.remove();
   });
 }

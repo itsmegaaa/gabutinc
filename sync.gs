@@ -7,7 +7,7 @@
 // ============================================================================
 const FIREBASE_PROJECT_ID = 'gabutinc';
 const FIREBASE_API_KEY    = 'AIzaSyCfoyVBf7sK2K2NlfoBXd3s4wOqAyW3b8o';
-const SPREADSHEET_ID      = SpreadsheetApp.getActiveSpreadsheet().getId();
+const SPREADSHEET_ID      = '';
 const SHEET_NAMES         = { '2023': '2023', '2024': '2024', '2025': '2025', '2026': '2026' };
 const COLLECTION_PREFIX   = 'laporan_';
 
@@ -87,6 +87,22 @@ function firestoreFetch_(url, options) {
 function getFirestoreBaseUrl_() {
   const config = getFirebaseConfig_();
   return `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents`;
+}
+
+function getSpreadsheet_() {
+  const props = PropertiesService.getScriptProperties();
+  const spreadsheetId = props.getProperty('SPREADSHEET_ID') || SPREADSHEET_ID;
+
+  if (spreadsheetId) {
+    return SpreadsheetApp.openById(spreadsheetId);
+  }
+
+  const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (activeSpreadsheet) {
+    return activeSpreadsheet;
+  }
+
+  throw new Error('SPREADSHEET_ID belum disetel di Script Properties dan tidak ada active spreadsheet.');
 }
 
 function assertFirestoreResponse_(response, context) {
@@ -229,7 +245,7 @@ function syncFromFirebase(tahun) {
   try {
     const baseUrl = getFirestoreBaseUrl_();
     const sheetName = SHEET_NAMES[tahun];
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getSpreadsheet_();
     sheet = ss.getSheetByName(sheetName);
 
     if (!sheet) {
@@ -389,8 +405,10 @@ function syncToFirebase(rowData, tahun) {
     payload: JSON.stringify(payload)
   });
   
-  const result = JSON.parse(response.getContentText());
-  if (response.getResponseCode() !== 200) return null;
+  const result = assertFirestoreResponse_(
+    response,
+    `${isNewDoc ? 'Create' : 'Update'} Firestore ${collectionPath}`
+  );
   if (isNewDoc && result.name) return result.name.split('/').pop();
   return docId;
 }
@@ -553,7 +571,7 @@ function autoSyncWorker() {
   if (!sheetName) return; // Tidak ada tugas
 
   // Menggunakan SPREADSHEET_ID global yang sudah kita set di paling atas skrip
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID); 
+  const ss = getSpreadsheet_(); 
   const sheet = ss.getSheetByName(sheetName);
   const tahun = Object.keys(SHEET_NAMES).find(t => SHEET_NAMES[t] === sheetName);
 
